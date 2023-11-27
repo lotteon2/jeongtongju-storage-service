@@ -1,4 +1,4 @@
-package com.jeongtongju.storage;
+package com.jeontongju.storage;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
