@@ -28,7 +28,7 @@ public class S3Service {
   public PresignedUrlResDto getPresignedUrl(String fileName) {
     String encodeFileName = UUID.randomUUID() + fileName;
     String objectKey = "dir/" + encodeFileName;
-    String dataUrl = bucket + ".s3." + region + ".amazonaws.com/" + objectKey;
+    String dataUrl = "https://" + bucket + ".s3." + region + ".amazonaws.com/" + objectKey;
 
     Date expiration = new Date();
     long expTimeMillis = expiration.getTime() + (3 * 60 * 1000); // 3 minutes
