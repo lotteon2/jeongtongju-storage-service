@@ -1,6 +1,7 @@
 package com.jeontongju.storage.controller;
 
 import com.jeontongju.storage.dto.response.PresignedUrlResDto;
+import com.jeontongju.storage.dto.response.ShortsResponseDto;
 import com.jeontongju.storage.service.S3Service;
 import io.github.bitbox.bitbox.dto.ResponseFormat;
 import lombok.RequiredArgsConstructor;
@@ -36,17 +37,18 @@ public class StorageController {
   }
 
   @PostMapping("/upload/shorts")
-  public ResponseEntity<ResponseFormat<String>> uploadShorts(
+  public ResponseEntity<ResponseFormat<ShortsResponseDto>> uploadShorts(
       @RequestPart MultipartFile shorts
   ) {
+    String uploadUrl = s3Service.uploadFileV1("shorts", shorts);
 
     return ResponseEntity.ok()
         .body(
-            ResponseFormat.<String>builder()
+            ResponseFormat.<ShortsResponseDto>builder()
                 .code(HttpStatus.OK.value())
-                .detail("업로드 경로 조회 성공")
+                .detail("업로드 성공")
                 .message(HttpStatus.OK.name())
-                .data(s3Service.uploadFileV1("shorts", shorts))
+                .data(s3Service.uploadShorts(uploadUrl))
                 .build()
         );
   }

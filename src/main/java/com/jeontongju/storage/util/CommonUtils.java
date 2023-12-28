@@ -1,18 +1,22 @@
 package com.jeontongju.storage.util;
 
+import java.util.UUID;
+
 public class CommonUtils {
 
   private static final String FILE_EXTENSION_SEPARATOR = ".";
   private static final String CATEGORY_PREFIX = "/";
-  private static final String TIME_SEPARATOR = "_";
 
   public static String buildFileName(String category, String originalFileName) {
     int fileExtensionIndex = originalFileName.lastIndexOf(FILE_EXTENSION_SEPARATOR);
     String fileExtension = originalFileName.substring(fileExtensionIndex);
-    String fileName = originalFileName.substring(0, fileExtensionIndex);
-    String now = String.valueOf(System.currentTimeMillis());
+    String fileName = UUID.randomUUID() + originalFileName.substring(0, fileExtensionIndex);
 
-    return category + CATEGORY_PREFIX + fileName + TIME_SEPARATOR + now + fileExtension;
+    return category + CATEGORY_PREFIX + fileName  + fileExtension;
+  }
+
+  public static String buildDataUrl(String bucket, String region, String encodeFileName) {
+    return "https://" + bucket + ".s3." + region + ".amazonaws.com/" + encodeFileName;
   }
 
 }

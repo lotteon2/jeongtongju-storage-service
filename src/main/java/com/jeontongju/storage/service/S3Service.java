@@ -6,9 +6,15 @@ import com.amazonaws.services.s3.model.CannedAccessControlList;
 import com.amazonaws.services.s3.model.GeneratePresignedUrlRequest;
 import com.amazonaws.services.s3.model.ObjectMetadata;
 import com.amazonaws.services.s3.model.PutObjectRequest;
+import com.jeontongju.storage.client.ConvertServiceClient;
+import com.jeontongju.storage.dto.request.RenderRequestDto;
+import com.jeontongju.storage.dto.response.AssetResponseDto;
 import com.jeontongju.storage.dto.response.PresignedUrlResDto;
+import com.jeontongju.storage.dto.response.RenderResponseDto;
+import com.jeontongju.storage.dto.response.ShortsResponseDto;
 import com.jeontongju.storage.execption.EmptyFileException;
 import com.jeontongju.storage.execption.FileUploadFailedException;
+import com.jeontongju.storage.execption.InvalidFileTypeException;
 import com.jeontongju.storage.util.CommonUtils;
 import java.io.IOException;
 import java.io.InputStream;
@@ -27,23 +33,27 @@ public class S3Service {
 
   private final AmazonS3Client amazonS3Client;
 
+  private final ConvertServiceClient convertServiceClient;
+
   @Value("${cloud.aws.s3.bucket}")
   public String bucket;  // S3 버킷
 
   @Value("${cloud.aws.region.static}")
   private String region;  // S3 리전
 
+  @Value("${convert-service.gif-url}")
+  private String gifUrl;
+
   public PresignedUrlResDto getPresignedUrl(String fileName) {
-    String encodeFileName = UUID.randomUUID() + fileName;
-    String objectKey = "dir/" + encodeFileName;
-    String dataUrl = "https://" + bucket + ".s3." + region + ".amazonaws.com/" + objectKey;
+    String encodeFileName = CommonUtils.buildFileName("dir", fileName);
+    String dataUrl = CommonUtils.buildDataUrl(bucket, region, encodeFileName);
 
     Date expiration = new Date();
     long expTimeMillis = expiration.getTime() + (3 * 60 * 1000); // 3 minutes
     expiration.setTime(expTimeMillis); // Set URL expiration time
 
     GeneratePresignedUrlRequest generatePresignedUrlRequest =
-        new GeneratePresignedUrlRequest(bucket, objectKey)
+        new GeneratePresignedUrlRequest(bucket, encodeFileName)
             .withMethod(HttpMethod.PUT)
             .withExpiration(expiration);
 
@@ -71,9 +81,21 @@ public class S3Service {
     return amazonS3Client.getUrl(bucket, fileName).toString();
   }
 
+  public ShortsResponseDto uploadShorts(String uploadUrl) {
+    RenderRequestDto request = RenderRequestDto.of(uploadUrl, 5, 0, 250, 250);
+
+    RenderResponseDto renderResponse = convertServiceClient.videoToGif(request);
+    String resultUrl = gifUrl + renderResponse.getResponse().getId() + "." + request.getOutput().getFormat();
+
+    return ShortsResponseDto.of(uploadUrl, resultUrl);
+  }
+
   private void validateFileExists(MultipartFile multipartFile) {
     if (multipartFile.isEmpty()) {
       throw new EmptyFileException();
+    }
+    if (!multipartFile.getContentType().contains("video")) {
+      throw new InvalidFileTypeException();
     }
   }
 
