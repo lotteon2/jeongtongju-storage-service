@@ -3,4 +3,8 @@ spring:
     name: storage-service
   config:
     import: optional:configserver:${CONFIG_SERVER}
+  servlet:
+    multipart:
+      max-file-size: 100MB
+      max-request-size: 100MB
 
