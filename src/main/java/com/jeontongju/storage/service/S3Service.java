@@ -12,19 +12,29 @@ import com.jeontongju.storage.dto.response.AssetResponseDto;
 import com.jeontongju.storage.dto.response.PresignedUrlResDto;
 import com.jeontongju.storage.dto.response.RenderResponseDto;
 import com.jeontongju.storage.dto.response.ShortsResponseDto;
+import com.jeontongju.storage.execption.DurationOverException;
 import com.jeontongju.storage.execption.EmptyFileException;
 import com.jeontongju.storage.execption.FileUploadFailedException;
 import com.jeontongju.storage.execption.InvalidFileTypeException;
 import com.jeontongju.storage.util.CommonUtils;
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.Date;
+import java.util.Optional;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.web.multipart.MultipartFile;
+import ws.schild.jave.EncoderException;
+import ws.schild.jave.InputFormatException;
+import ws.schild.jave.MultimediaObject;
+import ws.schild.jave.info.MultimediaInfo;
 
 @Slf4j
 @Component
@@ -85,7 +95,8 @@ public class S3Service {
     RenderRequestDto request = RenderRequestDto.of(uploadUrl, 5, 0, 250, 250);
 
     RenderResponseDto renderResponse = convertServiceClient.videoToGif(request);
-    String resultUrl = gifUrl + renderResponse.getResponse().getId() + "." + request.getOutput().getFormat();
+    String resultUrl =
+        gifUrl + renderResponse.getResponse().getId() + "." + request.getOutput().getFormat();
 
     return ShortsResponseDto.of(uploadUrl, resultUrl);
   }
@@ -96,6 +107,27 @@ public class S3Service {
     }
     if (!multipartFile.getContentType().contains("video")) {
       throw new InvalidFileTypeException();
+    }
+
+    File file = null;
+
+    try {
+      file = CommonUtils.convert(multipartFile).orElseThrow(InvalidFileTypeException::new);
+
+      MultimediaObject multimediaObject = new MultimediaObject(file);
+      MultimediaInfo multimediaInfo = multimediaObject.getInfo();
+      long min = (multimediaInfo.getDuration() / 1000) / 60;
+      long sec = (multimediaInfo.getDuration() / 1000) % 60;
+
+      log.info("min : {}, sec : {}", min, sec);
+      if (min >= 1L && sec != 0L) {
+        throw new DurationOverException();
+      }
+    } catch (IOException | EncoderException e) {
+      throw new FileUploadFailedException();
+    } finally {
+      if (file != null)
+        file.delete();
     }
   }
 

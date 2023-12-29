@@ -1,5 +1,6 @@
 package com.jeontongju.storage.execption.advice;
 
+import com.jeontongju.storage.execption.DurationOverException;
 import com.jeontongju.storage.execption.EmptyFileException;
 import com.jeontongju.storage.execption.FileUploadFailedException;
 import com.jeontongju.storage.execption.InvalidFileTypeException;
@@ -47,10 +48,26 @@ public class ControllerAdvice extends ResponseEntityExceptionHandler {
         );
   }
 
-
   @ExceptionHandler(InvalidFileTypeException.class)
   public ResponseEntity<ResponseFormat<Void>> handleInvalidFileTypeException(
       InvalidFileTypeException e) {
+    HttpStatus status = HttpStatus.BAD_REQUEST;
+
+    return ResponseEntity
+        .status(status.value())
+        .body(
+            ResponseFormat.<Void>builder()
+                .code(status.value())
+                .message(status.name())
+                .detail(e.getMessage())
+                .build()
+        );
+  }
+
+
+  @ExceptionHandler(DurationOverException.class)
+  public ResponseEntity<ResponseFormat<Void>> handleDurationOverException(
+      DurationOverException e) {
     HttpStatus status = HttpStatus.BAD_REQUEST;
 
     return ResponseEntity

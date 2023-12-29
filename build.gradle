@@ -39,6 +39,9 @@ dependencies {
 	annotationProcessor 'org.projectlombok:lombok'
 	testImplementation 'com.h2database:h2'
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
+
+	implementation 'ws.schild:jave-core:3.2.0'
+	implementation 'ws.schild:jave-all-deps:3.2.0'
 }
 
 dependencyManagement {
