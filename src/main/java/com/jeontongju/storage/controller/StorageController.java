@@ -5,6 +5,7 @@ import com.jeontongju.storage.dto.response.ShortsResponseDto;
 import com.jeontongju.storage.service.S3Service;
 import io.github.bitbox.bitbox.dto.ResponseFormat;
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.net.MalformedURLException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -26,7 +27,7 @@ public class StorageController {
 
   @PostMapping("/file/{fileName}")
   public ResponseEntity<ResponseFormat<PresignedUrlResDto>> getPresignedUrl(
-      @PathVariable String fileName) {
+      @PathVariable String fileName) throws UnsupportedEncodingException {
 
     return ResponseEntity.ok()
         .body(
